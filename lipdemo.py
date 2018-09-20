@@ -1,15 +1,12 @@
 import cv2
-import face_recognition
 import dlib
-import matplotlib.pyplot as plt
 import numpy as np
-import makeup
 
 # b,g,r
 lipcolor = (57., 40., 207.)
 white = (255., 255., 255.)
 # 人像文件
-FileName = 'test6.jpg'
+FileName = 'test3.jpg'
 oriImg = cv2.imread(FileName)
 gray = cv2.cvtColor(oriImg, cv2.COLOR_BGR2GRAY)
 # 初始化
@@ -41,12 +38,20 @@ def getPointsFromDlib(image):
                               points[60]] + [points[67]] + [points[66]] + [points[65]] + [
                                             points[64]]}
         face_landmarks_list.append(face_landmarks)
-    return face_landmarks_list, points
+    return face_landmarks_list[0], points
+
+
+def getPointsFromFile(file):
+    f = open('points.txt', 'r')
+    dict = f.read()
+    face_landmarks = eval(dict)
+    f.close()
+    return face_landmarks
 
 
 def showImg(name, file):
     cv2.imshow(name, file)
-    cv2.imshow('oriimg', oriImg)
+    cv2.imshow('original', oriImg)
     cv2.waitKey(0)
 
 
@@ -55,9 +60,10 @@ def nothing(x):
 
 
 # 获取嘴唇区域坐标点
-face_landmarks_list, points = getPointsFromDlib(FileName)
-top_lip = np.array([face_landmarks_list[0]['top_lip']])
-bottom_lip = np.array([face_landmarks_list[0]['bottom_lip']])
+face_landmarks, points = getPointsFromDlib(FileName)
+# face_landmarks = getPointsFromFile('points.txt')
+top_lip = np.array([face_landmarks['top_lip']])
+bottom_lip = np.array([face_landmarks['bottom_lip']])
 
 # 将原图嘴唇区域扣掉
 imageMask = np.zeros((oriImg.shape), dtype=np.uint8)
@@ -75,8 +81,7 @@ imageBlack = np.zeros((oriImg.shape), dtype=np.uint8)
 cv2.fillPoly(imageBlack, top_lip, white)
 cv2.fillPoly(imageBlack, bottom_lip, white)
 lipimg = cv2.bitwise_and(imageBlack, oriImg)
-
-
+showImg('imageBlack',imageBlack)
 # 使用addWeighted方式
 def addWeighted():
     # 混合嘴唇
@@ -117,8 +122,9 @@ def yuv():
     y2, u2, v2 = cv2.split(maskyuv)
     img = cv2.merge([y, u2, v2])
     img = cv2.cvtColor(img, cv2.COLOR_YUV2BGR)
-    result = cv2.add(img,img_bg)
-    showImg('result',result)
+    result = cv2.add(img, img_bg)
+    showImg('result', result)
+
 
 # 将原嘴唇的 bgr -》hsv
 # 嘴唇颜色color -》 hsv
@@ -129,9 +135,8 @@ def hsv():
     h2, s2, v2 = cv2.split(mask)
     img = cv2.merge([h2, s2, v])
     img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
-    result = cv2.add(img,img_bg)
-    showImg('result',result)
+    result = cv2.add(img, img_bg)
+    showImg('result', result)
 
 
-
-hsv()
+# hsv()
